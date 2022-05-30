@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="6e8284ec-16b1-4088-ad73-18b12be36035" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="008c3751-78ef-4e40-b0b1-d0aad43b7b06" basePath="/api" >
+		<http:request-connection host="${http.host}" port="${http.port}" />
+	</http:request-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="7380fc24-18de-4895-a6ad-b3c8226bb812" file="dev.yaml" />
+	<flow name="connector-configurationsFlow" doc:id="bc1bbbc0-2db8-4d84-8c98-76982d287160" >
+		<http:listener doc:name="Listener" doc:id="52fe4a53-eb75-47ea-b819-9d69e7cfa716" config-ref="HTTP_Listener_config" path="/connector-config-api" allowedMethods="POST"/>
+		<http:request method="GET" doc:name="Request" doc:id="71f5df27-f306-4d0e-81c6-c3c91bdb7f7e" config-ref="HTTP_Request_configuration" path="/users"/>
+		<ee:transform doc:name="Transform Message" doc:id="93972346-88cf-4100-a849-cfbb9263332d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.data map(emp,indexOfEmp)->{
+	eid:emp.id,
+	ename:emp.first_name ++ " " ++ emp.last_name,
+	mail:emp.email,
+	avatar:emp.avatar
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="9d07f409-e707-4da3-81c6-d2c7a47ec2a1" message="#[payload]"/>
+	</flow>
+</mule>
